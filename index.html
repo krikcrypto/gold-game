@@ -1,0 +1,60 @@
+saveProgress();
+            }
+        }
+    }
+
+    // Кнопка "Собрать золото" (Тап) - дает небольшой бонус
+    function collectGold() {
+        goldCents += 10; // Дает 0.10 золота за тап для ускорения игры
+        if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
+        updateUI();
+        saveProgress();
+    }
+
+    // Функция покупки (ЗАГЛУШКА)
+    function buyCharacter(index) {
+        // ВНИМАНИЕ: Здесь пока просто имитация покупки за звезды.
+        // В реальности здесь должен быть вызов Telegram Invoice.
+        alert("Для покупки за Telegram Stars требуется подключение сервера (бота). Пока это демо-версия.");
+        
+        // Для теста можно раскомментировать код ниже, чтобы проверить, как работает пассивный доход:
+        /*
+        counts[index] += 1;
+        if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+        lastUpdate = Date.now(); // Обновляем время, чтобы доход пошел сразу
+        updateUI();
+        saveProgress();
+        */
+    }
+
+    // Функция вывода (Заявка в поддержку)
+    function requestWithdraw() {
+        // Замените "your_support_username" на ваш реальный юзернейм в телеге
+        const supportUsername = "your_support_username"; 
+        const text = `Привет! Хочу вывести голду. Мой баланс: ${(goldCents / 100).toFixed(2)} 🪙. Мой Telegram ID: ${tg.initDataUnsafe?.user?.id || 'Неизвестен'}`;
+        
+        tg.showPopup({
+            title: "Вывод средств",
+            message: "Заявки на вывод оформляются вручную через поддержку. Открыть чат?",
+            buttons: [
+                {id: "cancel", type: "cancel", text: "Отмена"},
+                {id: "open", type: "default", text: "Написать в поддержку"}
+            ]
+        }, (buttonId) => {
+            if (buttonId === "open") {
+                // Открывает чат с поддержкой
+                tg.openTelegramLink(`https://t.me/${supportUsername}`);
+            }
+        });
+    }
+
+    // Запуск таймера обновления
+    addPassiveIncome(); // Первое начисление при входе
+    updateUI();
+    
+    // Начислять каждую секунду, пока приложение открыто
+    setInterval(() => {
+        addPassiveIncome();
+    }, 1000);
+
+</script>
