@@ -1,60 +1,50 @@
-saveProgress();
-            }
-        }
-    }
-
-    // Кнопка "Собрать золото" (Тап) - дает небольшой бонус
-    function collectGold() {
-        goldCents += 10; // Дает 0.10 золота за тап для ускорения игры
-        if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
-        updateUI();
-        saveProgress();
-    }
-
-    // Функция покупки (ЗАГЛУШКА)
-    function buyCharacter(index) {
-        // ВНИМАНИЕ: Здесь пока просто имитация покупки за звезды.
-        // В реальности здесь должен быть вызов Telegram Invoice.
-        alert("Для покупки за Telegram Stars требуется подключение сервера (бота). Пока это демо-версия.");
-        
-        // Для теста можно раскомментировать код ниже, чтобы проверить, как работает пассивный доход:
-        /*
-        counts[index] += 1;
-        if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
-        lastUpdate = Date.now(); // Обновляем время, чтобы доход пошел сразу
-        updateUI();
-        saveProgress();
-        */
-    }
-
-    // Функция вывода (Заявка в поддержку)
-    function requestWithdraw() {
-        // Замените "your_support_username" на ваш реальный юзернейм в телеге
-        const supportUsername = "your_support_username"; 
-        const text = `Привет! Хочу вывести голду. Мой баланс: ${(goldCents / 100).toFixed(2)} 🪙. Мой Telegram ID: ${tg.initDataUnsafe?.user?.id || 'Неизвестен'}`;
-        
-        tg.showPopup({
-            title: "Вывод средств",
-            message: "Заявки на вывод оформляются вручную через поддержку. Открыть чат?",
-            buttons: [
-                {id: "cancel", type: "cancel", text: "Отмена"},
-                {id: "open", type: "default", text: "Написать в поддержку"}
-            ]
-        }, (buttonId) => {
-            if (buttonId === "open") {
-                // Открывает чат с поддержкой
-                tg.openTelegramLink(`https://t.me/${supportUsername}`);
-            }
-        });
-    }
-
-    // Запуск таймера обновления
-    addPassiveIncome(); // Первое начисление при входе
-    updateUI();
-    
-    // Начислять каждую секунду, пока приложение открыто
-    setInterval(() => {
-        addPassiveIncome();
-    }, 1000);
-
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+body { margin: 0; padding: 0; background: #121212; color: white; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; }
+.header { background: #1e1e1e; width: 100%; padding: 20px 0; text-align: center; border-bottom: 2px solid #ffd700; }
+.gold-balance { font-size: 32px; font-weight: bold; color: #ffd700; }
+.characters-list { width: 90%; max-width: 400px; margin-top: 20px; display: flex; flex-direction: column; gap: 15px; }
+.character-card { background: #1e1e1e; border: 1px solid #333; border-radius: 15px; padding: 15px; display: flex; justify-content: space-between; }
+.buy-btn { background: #ffd700; color: #121212; border: none; border-radius: 10px; padding: 10px; font-weight: bold; }
+.action-btn { width: 90%; max-width: 400px; padding: 15px; margin-top: 15px; border: none; border-radius: 12px; font-weight: bold; background: #ffd700; color: #121212; }
+.btn-withdraw { background: #2a2a2a; color: white; border: 1px solid #555; }
+</style>
+</head>
+<body>
+<div class="header">
+<div class="gold-balance" id="gold">0.00</div>
+<div>В час: <span id="income">0.00</span></div>
+</div>
+<div class="characters-list">
+<div class="character-card"><div><b>💣 Террорист</b><br>+0.01/час<br>У вас: <span id="c0">0</span></div><button class="buy-btn" onclick="buy(0)">25 ⭐</button></div>
+<div class="character-card"><div><b>🛡️ Спецназ</b><br>+0.05/час<br>У вас: <span id="c1">0</span></div><button class="buy-btn" onclick="buy(1)">75 ⭐</button></div>
+<div class="character-card"><div><b>🧪 Химик</b><br>+0.10/час<br>У вас: <span id="c2">0</span></div><button class="buy-btn" onclick="buy(2)">200 ⭐</button></div>
+</div>
+<button class="action-btn" onclick="collect()">Собрать золото</button>
+<button class="action-btn btn-withdraw" onclick="withdraw()">Вывести</button>
+<script>
+let tg = window.Telegram.WebApp; tg.ready(); tg.expand();
+let chars = [{p:25, i:0.01}, {p:75, i:0.05}, {p:200, i:0.1}];
+let goldC = parseInt(localStorage.getItem('g')) || 0;
+let last = parseInt(localStorage.getItem('l')) || Date.now();
+let counts = JSON.parse(localStorage.getItem('cnt')) || [0,0,0];
+function getIncome() { let t = 0; counts.forEach((c, idx) => t += c * chars[idx].i); return t; }
+function update() {
+document.getElementById('gold').innerText = (goldC/100).toFixed(2);
+document.getElementById('income').innerText = getIncome().toFixed(2);
+counts.forEach((c, idx) => document.getElementById('c'+idx).innerText = c);
+}
+function save() { localStorage.setItem('g', goldC); localStorage.setItem('l', Date.now()); localStorage.setItem('cnt', JSON.stringify(counts)); }
+function passive() { let now = Date.now(); let diff = (now - last) / 1000; let e = (getIncome()/3600) * diff; let add = Math.floor(e * 100); if (add > 0) { goldC += add; last = now; update(); save(); } }
+function collect() { goldC += 10; tg.HapticFeedback.impactOccurred('light'); update(); save(); }
+function buy(idx) { alert("Для покупки нужно подключить сервер."); }
+function withdraw() { tg.showPopup({title: "Вывод", message: "Напишите в поддержку", buttons: [{id: "open", type: "default", text: "Открыть"}]}, (b) => { if(b === 'open') tg.openTelegramLink('https://t.me/your_support_username'); }); }
+passive(); update(); setInterval(passive, 1000);
 </script>
+</body>
+</html>
