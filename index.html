@@ -7,7 +7,7 @@
 <style>
 :root{--bg:#f5f7fa;--card:#fff;--text:#1a1a1a;--muted:#666;--acc:#ffc107;--border:#e0e0e0;--nav:#fff;--green:#4caf50;--blue:#2196f3;--red:#f44336}
 body.dark{--bg:#121212;--card:#1e1e1e;--text:#fff;--muted:#aaa;--acc:#ffd700;--border:#333;--nav:#1e1e1e;--green:#388e3c;--blue:#1976d2;--red:#d32f2f}
-body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:sans-serif;display:flex;flex-direction:column;min-height:100vh;user-select:none;transition:0.3s;padding-bottom:70px}
+body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:sans-serif;display:flex;flex-direction:column;min-height:100vh;user-select:none;padding-bottom:70px}
 .header{background:var(--card);width:100%;padding:15px 20px;box-sizing:border-box;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10}
 .gold{font-size:26px;font-weight:bold;color:var(--acc)}
 .inc{font-size:12px;color:var(--muted)}
@@ -29,12 +29,12 @@ body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:sans-
 .r{background:var(--red)}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;width:100%;max-width:400px}
 .stat-card{background:var(--card);border:1px solid var(--border);border-radius:15px;padding:15px;text-align:center}
-.stat-title{font-size:11px;color:var(--muted);margin-bottom:5px;text-transform:uppercase}
+.stat-title{font-size:11px;color:var(--muted);margin-bottom:5px}
 .stat-val{font-size:18px;font-weight:bold;color:var(--acc)}
-.w-box{background:var(--card);border:1px solid var(--border);border-radius:15px;padding:20px;width:100%;max-width:400px;text-align:center}
+.w-box{background:var(--card);border:1px solid var(--border);border-radius:15px;padding:20px;width:100%;max-width:400px;text-align:center;box-sizing:border-box}
 .w-btn{width:100%;padding:15px;border:none;border-radius:12px;font-size:16px;font-weight:bold;background:var(--green);color:white;margin-top:15px;cursor:pointer}
 .nav{position:fixed;bottom:0;left:0;width:100%;background:var(--nav);display:flex;justify-content:space-around;padding:10px 0;border-top:1px solid var(--border);z-index:100}
-.nav-btn{background:none;border:none;color:var(--muted);display:flex;flex-direction:column;align-items:center;font-size:11px;font-weight:500;cursor:pointer;width:25%}
+.nav-btn{background:none;border:none;color:var(--muted);display:flex;flex-direction:column;align-items:center;font-size:11px;cursor:pointer;width:25%}
 .nav-btn .icon{font-size:22px;margin-bottom:2px}
 .nav-btn.active{color:var(--acc)}
 </style>
@@ -52,16 +52,14 @@ body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:sans-
 <div id="tab-chests" class="tab"><div class="list" id="chestsList"></div></div>
 <div id="tab-stats" class="tab">
 <div class="grid">
-<div class="stat-card"><div class="stat-title">Всего заработано</div><div class="stat-val" id="s_earned">0.00 🪙</div></div>
-<div class="stat-card"><div class="stat-title">Всего потрачено</div><div class="stat-val" id="s_spent">0 🪙</div></div>
-<div class="stat-card"><div class="stat-title">Куплено персонажей</div><div class="stat-val" id="s_bought">0</div></div> <div class="stat-card"><div class="stat-title">Открыто сундуков</div><div class="stat-val" id="s_chests">0</div></div>
-<div class="stat-card" style="grid-column: span 2;"><div class="stat-title">Время в игре</div><div class="stat-val" id="s_time">0 мин</div></div>
+<div class="stat-card"><div class="stat-title">Всего заработано</div><div class="stat-val" id="s_earned">0.00</div></div>
+<div class="stat-card"><div class="stat-title">Всего потрачено</div><div class="stat-val" id="s_spent">0</div></div>
+<div class="stat-card"><div class="stat-title">Куплено</div><div class="stat-val" id="s_bought">0</div></div>
+<div class="stat-card"><div class="stat-title">Сундуков</div><div class="stat-val" id="s_chests">0</div></div>
 </div>
-</div>
-<div id="tab-withdraw" class="tab">
+</div> <div id="tab-withdraw" class="tab">
 <div class="w-box">
 <h2 style="margin-top:0;color:var(--acc)">💸 Вывод</h2>
-<p style="color:var(--muted);font-size:14px">Вывод вручную через поддержку.</p>
 <div class="gold" style="font-size:24px;margin:15px 0" id="w_bal">0.00 🪙</div>
 <button class="w-btn" onclick="reqWithdraw()">Написать в поддержку</button>
 </div>
@@ -76,116 +74,153 @@ body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:sans-
 
 <script>
 let tg = window.Telegram.WebApp;
-tg.ready(); tg.expand();
+tg.ready(); 
+tg.expand();
 const SUPPORT = "mestdead";
 
 const chars = [
-{name:"Бомж",rb:0,st:0,inc:0.01},{name:"Новичек",rb:15,st:25,inc:0.05},
-{name:"Подрастающий",rb:25,st:50,inc:0.07},{name:"Игрок",rb:50,st:125,inc:0.09},
-{name:"Про",rb:100,st:250,inc:0.13},{name:"Надзиратель",rb:250,st:550,inc:0.2},
-{name:"Крушитель",rb:1000,st:2250,inc:0.39}
+  {name:"Бомж",rb:0,st:0,inc:0.01},
+  {name:"Новичек",rb:15,st:25,inc:0.05},
+  {name:"Подрастающий",rb:25,st:50,inc:0.07},
+  {name:"Игрок",rb:50,st:125,inc:0.09},
+  {name:"Про",rb:100,st:250,inc:0.13},
+  {name:"Надзиратель",rb:250,st:550,inc:0.2},
+  {name:"Крушитель",rb:1000,st:2250,inc:0.39}
 ];
 
 const chests = [
-{name:"🪵 Нищий",rb:10,st:25,drops:[{id:0,c:80},{id:1,c:17},{id:2,c:3}],text:"Бомж:80%<br>Новичек:17%<br>Подраст:3%"},
-{name:"💼 Обеспеченный",rb:45,st:110,drops:[{id:2,c:80},{id:3,c:18},{id:4,c:2}],text:"Подраст:80%<br>Игрок:18%<br>Про:2%"},
-{name:"💎 Миллионер",rb:350,st:1500,drops:[{id:4,c:80},{id:5,c:19},{id:6,c:1}],text:"Про:80%<br>Надз:19%<br>Круш:1%"}
+  {name:"🪵 Нищий",rb:10,st:25,drops:[{id:0,c:80},{id:1,c:17},{id:2,c:3}],text:"Бомж:80%<br>Новичек:17%<br>Подраст:3%"},
+  {name:"💼 Обеспеченный",rb:45,st:110,drops:[{id:2,c:80},{id:3,c:18},{id:4,c:2}],text:"Подраст:80%<br>Игрок:18%<br>Про:2%"},
+  {name:"💎 Миллионер",rb:350,st:1500,drops:[{id:4,c:80},{id:5,c:19},{id:6,c:1}],text:"Про:80%<br>Надз:19%<br>Круш:1%"}
 ];
 
-let gold = parseInt(localStorage.getItem('g')) || 0;
-let lvls = JSON.parse(localStorage.getItem('l')) || [0,0,0,0,0,0,0];
-let stats = JSON.parse(localStorage.getItem('s')) || {earned:0, spent:0, bought:0, chests:0, time:0};
+let gold = 0;
+let lvls = [0,0,0,0,0,0,0];
+let stats = {earned:0, spent:0, bought:0, chests:0};
 
-if(localStorage.getItem('t')==='dark'){document.body.classList.add('dark');document.getElementById('themeBtn').innerText='🌙';}
+try {
+  let savedGold = localStorage.getItem('g');
+  if(savedGold) gold = parseInt(savedGold);
+  
+  let savedLvls = localStorage.getItem('l');
+  if(savedLvls) lvls = JSON.parse(savedLvls);
+  
+  let savedStats = localStorage.getItem('s');
+  if(savedStats) stats = JSON.parse(savedStats);
+
+  if(localStorage.getItem('t')==='dark'){
+    document.body.classList.add('dark');
+    document.getElementById('themeBtn').innerText='🌙';
+  }
+} catch(e) { console.log("Ошибка загрузки"); }
+
+if(lvls[0]===0) lvls[0]=1;
 
 function toggleTheme(){
-document.body.classList.toggle('dark');
-let isDark = document.body.classList.contains('dark');
-localStorage.setItem('t', isDark?'dark':'light');
-document.getElementById('themeBtn').innerText = isDark?'🌙':'☀️';
-if(tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
+  document.body.classList.toggle('dark');
+  let isDark = document.body.classList.contains('dark');
+  localStorage.setItem('t', isDark?'dark':'light');
+  document.getElementById('themeBtn').innerText = isDark?'🌙':'☀️';
+}
+
+function save(){ 
+  localStorage.setItem('g',gold); 
+  localStorage.setItem('l',JSON.stringify(lvls)); 
+  localStorage.setItem('s',JSON.stringify(stats)); 
 }
 
 function render(){
-let cList = document.getElementById('charsList');
-cList.innerHTML = '';
-chars.forEach((c,i)=>{
-let canBuy = gold >= c.rb*100;
-let btns = '';
-if(c.rb===0){ btns = <button class="btn g" disabled>${lvls[i]>0?'Получен':'Бесплатно'}</button>; }
-else { btns = <button class="btn g" onclick="buy(${i})" ${canBuy?'':'disabled'}>${c.rb} 🪙</button><button class="btn b" onclick="alert('Звезды позже')">${c.st} ⭐</button>; }
-if(lvls[i]>0 && c.rb>0){ btns += <button class="btn r" onclick="sell(${i})">Продать</button>; }
-cList.innerHTML += <div class="card"><div class="row"><div><div class="name">${c.name}</div><div class="income">+${(c.inc*lvls[i]).toFixed(2)}/час</div></div><div class="lvl">Ур: ${lvls[i]}</div></div><div class="btns">${btns}</div></div>;
-});
+  let cList = document.getElementById('charsList');
+  let html = '';
+  for(let i=0; i<chars.length; i++) {
+    let c = chars[i];
+    let canBuy = gold >= c.rb*100;
+    let btns = '';
+    if(c.rb===0) { 
+      btns = <button class="btn g" disabled>Получен</button>; 
+    } else { 
+      btns = `<button class="btn g" onclick="buy(${i})" ${canBuy?'':'disabled'}>${c.rb} 🪙</button>
+              <button class="btn b" onclick="alert('Звезды позже')">${c.st} ⭐</button>`; 
+    }
+    if(lvls[i]>0 && c.rb>0) { 
+      btns += <button class="btn r" onclick="sell(${i})">Продать</button>; 
+    }
+    html += <div class="card"><div class="row"><div><div class="name">${c.name}</div><div class="income">+${(c.inc*lvls[i]).toFixed(2)}/час</div></div><div class="lvl">Ур: ${lvls[i]}</div></div><div class="btns">${btns}</div></div>;
+  }
+  cList.innerHTML = html;
 
-let chList = document.getElementById('chestsList');
-chList.innerHTML = '';
-chests.forEach((c,i)=>{
-let canBuy = gold >= c.rb*100;
-chList.innerHTML += <div class="card"><div class="row"><div class="name">${c.name}</div><div class="lvl" style="font-size:10px;text-align:right">${c.text}</div></div><div class="btns"><button class="btn g" onclick="openC(${i})" ${canBuy?'':'disabled'}>${c.rb} 🪙</button><button class="btn b" onclick="alert('Звезды позже')">${c.st} ⭐</button></div></div>;
-});
+  let chList = document.getElementById('chestsList');
+  let chHtml = '';
+  for(let i=0; i<chests.length; i++) {
+    let c = chests[i];
+    let canBuy = gold >= c.rb*100;
+    chHtml += <div class="card"><div class="row"><div class="name">${c.name}</div><div class="lvl" style="font-size:10px;text-align:right">${c.text}</div></div><div class="btns"><button class="btn g" onclick="openC(${i})" ${canBuy?'':'disabled'}>${c.rb} 🪙</button><button class="btn b" onclick="alert('Звезды позже')">${c.st} ⭐</button></div></div>;
+  }
+  chList.innerHTML = chHtml;
 
-document.getElementById('bal').innerText = (gold/100).toFixed(2)+' 🪙';
-document.getElementById('w_bal').innerText = (gold/100).toFixed(2)+' 🪙';
-let tInc = 0; lvls.forEach((l,i)=>tInc+=l*chars[i].inc);
-document.getElementById('inc').innerText = Доход: ${tInc.toFixed(2)}/час;
-document. getElementById('s_earned').innerText = (stats.earned/100).toFixed(2)+' 🪙';
-document.getElementById('s_spent').innerText = (stats.spent/100).toFixed(0)+' 🪙';
-document.getElementById('s_bought').innerText = stats.bought;
-document.getElementById('s_chests').innerText = stats.chests;
-document.getElementById('s_time').innerText = Math.floor(stats.time/60)+' мин';
+  document.getElementById('bal').innerText = (gold/100).toFixed(2)+' 🪙';
+  document.getElementById('w_bal').innerText = (gold/100). toFixed(2)+' 🪙';
+  
+  let tInc = 0; 
+  for(let i=0; i<lvls.length; i++) { tInc += lvls[i]*chars[i].inc; }
+  document.getElementById('inc').innerText = Доход: ${tInc.toFixed(2)}/час;
+  
+  document.getElementById('s_earned').innerText = (stats.earned/100).toFixed(2);
+  document.getElementById('s_spent').innerText = (stats.spent/100).toFixed(0);
+  document.getElementById('s_bought').innerText = stats.bought;
+  document.getElementById('s_chests').innerText = stats.chests;
 }
 
-function save(){ localStorage.setItem('g',gold); localStorage.setItem('l',JSON.stringify(lvls)); localStorage.setItem('s',JSON.stringify(stats)); }
-
 function buy(i){
-let price = chars[i].rb*100;
-if(gold>=price){ gold-=price; lvls[i]++; stats.spent+=price; stats.bought++; save(); render(); if(tg.HapticFeedback)tg.HapticFeedback.notificationOccurred('success'); }
+  let price = chars[i].rb*100;
+  if(gold>=price){ gold-=price; lvls[i]++; stats.spent+=price; stats.bought++; save(); render(); }
 }
 
 function sell(i){
-if(lvls[i]>0){
-tg.showPopup({title:"Продажа",message:`Продать 1 уровень "${chars[i].name}"?`,buttons:[{id:"c",type:"cancel",text:"Нет"},{id:"y",type:"destructive",text:"Да"}]},(b)=>{
-if(b==='y'){ lvls[i]--; gold+=Math.floor(chars[i].rb*0.7)*100; save(); render(); }
-});
-}
+  if(lvls[i]>0){
+    lvls[i]--; 
+    gold += Math.floor(chars[i].rb*0.7)*100; 
+    save(); render();
+  }
 }
 
 function openC(i){
-let c = chests[i];
-if(gold>=c.rb*100){
-gold-=c.rb*100; stats.spent+=c.rb*100; stats.chests++;
-let r = Math.random()*100, sum=0, dropId=0;
-for(let d of c.drops){ sum+=d.c; if(r<sum){dropId=d.id;break;} }
-lvls[dropId]++; save(); render();
-if(tg.HapticFeedback)tg.HapticFeedback.notificationOccurred('success');
-tg.showAlert(`Выпал: ${chars[dropId].name}!`);
-}
+  let c = chests[i];
+  if(gold>=c.rb*100){
+    gold-=c.rb*100; stats.spent+=c.rb*100; stats.chests++;
+    let r = Math.random()*100, sum=0, dropId=0;
+    for(let j=0; j<c.drops.length; j++) { 
+      sum+=c.drops[j].c; 
+      if(r<sum){ dropId=c.drops[j].id; break; } 
+    }
+    lvls[dropId]++; 
+    save(); render();
+    tg.showAlert(`Выпал: ${chars[dropId].name}!`);
+  }
 }
 
 function reqWithdraw(){
-if(gold<100) return tg.showAlert("Минимум 1.00 🪙");
-let uid = tg.initDataUnsafe?.user?.id || "ID";
-let msg = encodeURIComponent(`Привет! Хочу вывести ${(gold/100).toFixed(2)} 🪙. Мой ID: ${uid}`);
-tg.openTelegramLink(`https://t.me/${SUPPORT}?text=${msg}`);
+  if(gold<100) return alert("Минимум 1.00");
+  let uid = tg.initDataUnsafe?.user?.id || "ID";
+  let msg = encodeURIComponent(`Привет! Хочу вывести ${(gold/100).toFixed(2)} 🪙. Мой ID: ${uid}`);
+  tg.openTelegramLink(`https://t.me/${SUPPORT}?text=${msg}`);
 }
 
 function switchTab(t,b){
-document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
-document.getElementById('tab-'+t).classList.add('active');
-document.querySelectorAll('.nav-btn').forEach(x=>x.classList.remove('active'));
-b.classList.add('active');
-if(tg.HapticFeedback)tg.HapticFeedback.selectionChanged();
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+  document.getElementById('tab-'+t).classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');
 }
 
 setInterval(()=>{
-let tInc = 0; lvls.forEach((l,i)=>tInc+=l*chars[i].inc);
-let incSec = (tInc/3600)*10;
-gold += incSec; stats.earned += incSec; stats.time+=1; gold=Math.floor(gold);
-save(); render();
+  let tInc = 0; 
+  for(let i=0; i<lvls.length; i++) { tInc += lvls[i]*chars[i].inc; }
+  let incSec = (tInc/3600)*10;
+  gold += incSec; stats.earned += incSec; gold = Math.floor(gold);
+  save(); render();
 },1000);
 
-if(lvls[0]===0){lvls[0]=1;save();}
 render();
 </script>
 </body>
